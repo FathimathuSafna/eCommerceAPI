@@ -1,0 +1,38 @@
+import mongoose from "mongoose";
+
+const foodSchema = new mongoose.Schema({
+  restaurantId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Restaurant",
+    required: true,
+  },
+  name: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: String,
+  },
+  price: {
+    type: Number,
+    required: true,
+  },
+  image: {
+    type: String,
+  },
+  category: {
+    type: String,
+    enum: ["Biryani", "Drinks", "Dessert", "Main Course", "Appetizers", "Salads", "Soups", "Snacks"],
+  }, 
+  isAvailable: {
+    type: Boolean,
+    default: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+const Food = mongoose.model("Food", foodSchema);
+export default Food;
