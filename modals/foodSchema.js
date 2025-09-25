@@ -22,7 +22,7 @@ const foodSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ["Biryani", "Drinks", "Dessert", "Main Course", "Appetizers", "Salads", "Soups", "Snacks"],
+    enum: ["Biriyani", "Drinks", "Dessert", "Main Course", "Appetizers", "Salads", "Soups", "Snacks"],
   }, 
   isAvailable: {
     type: Boolean,
