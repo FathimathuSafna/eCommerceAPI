@@ -40,7 +40,7 @@ const removeFromCart = async (req, res) => {
 };
 
 const getCartItems = async (req, res) => {
-  const userId = req.params.id;
+  const userId = req.user._id;
   try {
     const cartItems = await Cart.find({ userId })
       .populate({
