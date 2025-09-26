@@ -19,11 +19,21 @@ const foodSchema = new mongoose.Schema({
   },
   image: {
     type: String,
+    required: true,
   },
   category: {
     type: String,
-    enum: ["Biriyani", "Drinks", "Dessert", "Main Course", "Appetizers", "Salads", "Soups", "Snacks"],
-  }, 
+    enum: [
+      "Biriyani",
+      "Drinks",
+      "Dessert",
+      "Main Course",
+      "Appetizers",
+      "Salads",
+      "Soups",
+      "Snacks",
+    ],
+  },
   isAvailable: {
     type: Boolean,
     default: true,

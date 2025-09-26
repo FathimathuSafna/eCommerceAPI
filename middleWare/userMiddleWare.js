@@ -11,6 +11,7 @@ const protect = AsyncHandler(async (req, res, next) => {
       res.status(401).json({ msg: 'No user found..' })
       throw new Error('Not Authorized')
     } else {
+      req.user = isUser
       next();
     }
 
