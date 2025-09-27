@@ -14,7 +14,7 @@ const userSignup = async (req, res) => {
     res.status(201).json({
       msg: "User detailes added succesfully",
 
-      userDetails,
+      data:userDetails,
     });
   } catch (err) {
     res.status(400).json({
