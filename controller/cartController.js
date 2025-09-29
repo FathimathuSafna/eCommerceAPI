@@ -3,8 +3,6 @@ import Cart from "../modals/cartSchema.js";
 const addToCart = async (req, res) => {
   const userId = req.user._id;
   const  foodId = req.params.id
-  console.log("foodId:", foodId);
-
   if (!foodId) {
     return res.status(400).json({ msg: "foodId is required" });
   }
@@ -15,8 +13,6 @@ const addToCart = async (req, res) => {
       foodId,
     //   quantity: quantity || 1,
     });
-
-    console.log("cartItem:", cartItem);
     res.status(201).json({
       msg: "Item added to cart successfully",
       data: cartItem,
@@ -70,4 +66,23 @@ const getCartItems = async (req, res) => {
   }
 };
 
-export { addToCart, removeFromCart, getCartItems };
+const updateCartItem = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { quantity } = req.body;
+    const updatedCartItem = await Cart.findByIdAndUpdate(
+      id,
+      { quantity },
+      { new: true }
+    );
+    res.status(200).json({
+      msg: "Cart item updated successfully",
+      data: updatedCartItem,
+    });
+  }
+  catch (err) {
+    res.status(400).json(err);
+  }
+};
+
+export { addToCart, removeFromCart, getCartItems, updateCartItem };

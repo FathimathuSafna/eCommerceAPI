@@ -3,6 +3,7 @@ import Restaurant from "../modals/restaurantSchema.js";
 import Food from "../modals/foodSchema.js";
 import generateToken from "../utils/generateToken.js";
 import bcrypt from "bcryptjs";
+import User from "../modals/userSchema.js";
 
 
 
@@ -136,23 +137,43 @@ const addFoodItems = async (req, res) => {
   }
 };
 
+
 const getFoodItems = async (req, res) => {
-  const { id } = req.query;
-  let filter = {};
-  if (id) filter._id = id;
   try {
-    const foodDetails = await Food.find(filter).populate("restaurantId","restaurantsName");
+    // 1. Get all food items
+    // .lean() makes the query faster as it returns plain JS objects
+    const allFoods = await Food.find({}).populate("restaurantId", "restaurantsName").lean();
+
+    // 2. Check if a user is logged in (from your 'protect' middleware)
+    const userId = req.user?._id;
+
+    if (userId) {
+      // 3. Get all of this user's likes in a single query
+      const userLikes = await Likes.find({ userId }).select('foodId').lean();
+      
+      // 4. Create a Set for fast lookup (O(1) complexity)
+      const likedFoodIds = new Set(userLikes.map(like => like.foodId.toString()));
+
+      // 5. Add the 'isLiked' field to each food item
+      allFoods.forEach(food => {
+        food.isLiked = likedFoodIds.has(food._id.toString());
+      });
+    } else {
+        // If no user is logged in, all items are not liked by default
+        allFoods.forEach(food => {
+            food.isLiked = false;
+        });
+    }
+
     res.status(200).json({
       msg: "Food items fetched successfully",
-      data: foodDetails,
+      data: allFoods,
     });
   } catch (err) {
-    res.status(400).json({
-      err
-    });
+    console.error("Error fetching all food items:", err);
+    res.status(500).json({ msg: "Server error", error: err });
   }
 };
-
 const updateFoodItems = async (req, res) => {
   try {
     let id = req.params.id;
@@ -181,6 +202,31 @@ const deleteFoodItems = async (req, res) => {
   }
 };
 
+const getAllUserDetails = async (req, res) => {
+  try {
+    const userDetails = await User.find();
+    res.status(200).json({
+      msg: "User details fetched successfully",
+      data: userDetails,
+    });
+  }
+  catch (err) {
+    res.status(400).json(err);
+  }
+};
+
+const getRestaurantsDetails = async (req,res) =>{
+  try{
+    const resDetails = await Food.find().populate("restaurantId","restaurantsName address description image")
+    res.status(200).json({
+      msg:"restaurant detailes fetched successfully",
+      data:resDetails
+    })
+  } catch(err){
+    res.status(400).json(err)
+  }
+}
+
 
 
 export {
@@ -194,4 +240,6 @@ export {
   getFoodItems,
   updateFoodItems,
   deleteFoodItems,
+  getAllUserDetails,
+  getRestaurantsDetails
 };

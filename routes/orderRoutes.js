@@ -1,11 +1,11 @@
-import { createOrder, deleteOrder,getOrders,getAllOrders } from "../controller/orderController.js";
+import { createOrder, deleteOrder,updateOrder,getOrders,getAllOrders } from "../controller/orderController.js";
 import protect from "../middleWare/userMiddleWare.js";
 import express from "express";
 
 const app = express.Router();
-app.route("/").post(createOrder).get(protect,getOrders);
+app.route("/").post(protect,createOrder).get(protect,getOrders);
 app.route('/getAll').get(getAllOrders)
-app.route("/:id").delete(deleteOrder);
+app.route("/:id").delete(deleteOrder).put(updateOrder);
 
 //update admin order not done
 

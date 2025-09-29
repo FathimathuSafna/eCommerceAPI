@@ -65,10 +65,11 @@ const updateDetails = async (req, res) => {
 };
 
 const getUserDetails = async (req, res) => {
-  let id = req.params.id;
+  let id = req.user._id
   try {
     const getUser = await User.findById(id);
-    res.status(201).jsob({
+    console.log("user detai",getUser)
+    res.status(201).json({
       msg: "user details fetched successfully",
       data: getUser,
     });
@@ -77,35 +78,18 @@ const getUserDetails = async (req, res) => {
   }
 };
 
-const addToCart = async (req, res) => {
+const deleteUserDetails = async (req, res) => {
   let id = req.params.id;
   try {
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({ msg: "User not found" });
-    }
-    user.cart.push(req.body);
-    await user.save();
-    res.status(200).json({ msg: "Item added to cart", data: user.cart });
+    const deleteUser = await User.findByIdAndDelete(id);
+    res.status(201).json({
+      msg: "User deleted successfully",
+      data: deleteUser,
+    });
   } catch (err) {
     res.status(400).json(err);
   }
 };
 
-const removeFromCart = async (req, res) => {
-  let id = req.params.id;
-  let itemId = req.params.itemId;
-  try {
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({ msg: "User not found" });
-    }
-    user.cart = user.cart.filter((item) => item._id.toString() !== itemId);
-    await user.save();
-    res.status(200).json({ msg: "Item removed from cart", data: user.cart });
-  } catch (err) {
-    res.status(400).json(err);
-  }
-};
 
-export { userSignup, userLogin, updateDetails, getUserDetails };
+export { userSignup, userLogin, updateDetails, getUserDetails,deleteUserDetails };

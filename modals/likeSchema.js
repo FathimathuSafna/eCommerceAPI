@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 
-var Schema = mongoose.Schema;
-var likeSchema = new Schema({
+const likeSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
@@ -9,15 +8,17 @@ var likeSchema = new Schema({
     },
     foodId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Food",    
+        ref: "Food",      
         required: true,
     },
     likedAt: {
         type: Date,
         default: Date.now,
     },
-    
 });
 
-const Likes = mongoose.model("Likes",likeSchema );
+// ✅ Ensures a user can't like the same food item twice
+likeSchema.index({ userId: 1, foodId: 1 }, { unique: true });
+
+const Likes = mongoose.model("Likes", likeSchema);
 export default Likes;

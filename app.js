@@ -5,6 +5,7 @@ import userRoutes from './routes/userRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 import cartRoutes from './routes/cartRoutes.js'
 import orderRoutes from './routes/orderRoutes.js'
+import likeRoutes from './routes/likeRoutes.js'
 import cors from "cors";
 
 
@@ -31,6 +32,8 @@ app.use("/user",userRoutes)
 app.use("/admin",adminRoutes)
 app.use("/cart",cartRoutes)
 app.use("/order",orderRoutes)
+app.use("/likes",likeRoutes)
+
 
 
 
