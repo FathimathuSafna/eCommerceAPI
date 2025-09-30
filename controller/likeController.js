@@ -3,8 +3,7 @@ import mongoose from "mongoose";
 
 const addLike = async (req, res) => {
   try {
-    const userId = req.user._id;
-    const { foodId } = req.body;
+    const { foodId,userId } = req.body;
 
     if (!foodId) {
       return res.status(400).json({ msg: "Food ID is required." });
@@ -24,29 +23,30 @@ const addLike = async (req, res) => {
 
 const fetchLikes = async (req, res) => {
   try {
-    const userId = req.user._id;
-    const { foodId } = req.query;
-    let filter = { userId };
+    
+    const userId = req.user._id; 
 
-    if (foodId) {
-      filter.foodId = foodId;
-    }
-    const userLikes = await Likes.find({ userId: req.user._id })
+    const userLikes = await Likes.find({ userId: userId }) // no need for `new ObjectId(...)`
       .populate({
         path: "foodId",
         select: "name price image isAvailable category",
         populate: {
-          path: "restaurantId", // nested populate
+          path: "restaurantId",
           select: "restaurantsName",
         },
       })
       .lean();
+    console.log("basbhasjhbds", userLikes);
+
+    // Optional: remove likes where the food was deleted
+    const validLikes = userLikes.filter((like) => like.foodId !== null);
 
     res.status(200).json({
       msg: "Likes fetched successfully",
-      data: userLikes,
+      data: validLikes,
     });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ msg: "Server Error", error: err.message });
   }
 };

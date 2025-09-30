@@ -86,6 +86,7 @@ const getRestaurants = async (req, res) => {
   if (id) filter._id = id;
   try {
     const restaurantDetails = await Restaurant.find(filter);
+    console.log("restaurant details",restaurantDetails)
     res.status(200).json({
       msg: "Restaurant details fetched successfully",
       data: restaurantDetails,

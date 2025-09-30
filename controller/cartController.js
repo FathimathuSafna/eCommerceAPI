@@ -1,4 +1,5 @@
 import Cart from "../modals/cartSchema.js";
+import Order from "../modals/orderSchema.js";
 
 const addToCart = async (req, res) => {
   const userId = req.user._id;
@@ -37,7 +38,15 @@ const removeFromCart = async (req, res) => {
 
 const getCartItems = async (req, res) => {
   const userId = req.user._id;
+
   try {
+    // 1. Find all cartIds that are already linked to an Order
+    const orders = await Order.find({ userId }).select("cartIds").lean();
+    const orderedCartIds = new Set(
+      orders.flatMap((order) => order.cartIds.map((id) => id.toString()))
+    );
+
+    // 2. Get carts for this user that are NOT in an order
     const cartItems = await Cart.find({ userId })
       .populate({
         path: "foodId",
@@ -48,23 +57,34 @@ const getCartItems = async (req, res) => {
         },
       })
       .lean();
-    const cartItemsWithTotal = cartItems.map((item) => ({
+
+    // 3. Filter out cart items that belong to past orders
+    const activeCartItems = cartItems.filter(
+      (item) => !orderedCartIds.has(item._id.toString())
+    );
+
+    // 4. Calculate totals
+    const cartItemsWithTotal = activeCartItems.map((item) => ({
       ...item,
       totalPrice: item.quantity * (item.foodId?.price || 0),
     }));
+
     const cartTotalPrice = cartItemsWithTotal.reduce(
       (sum, item) => sum + item.totalPrice,
       0
     );
+
     res.status(200).json({
       msg: "Cart items fetched successfully",
       data: cartItemsWithTotal,
       cartTotalPrice,
     });
   } catch (err) {
-    res.status(400).json(err);
+    console.error("Error fetching cart items:", err);
+    res.status(400).json({ msg: "Failed to fetch cart items", error: err });
   }
 };
+
 
 const updateCartItem = async (req, res) => {
   try {
