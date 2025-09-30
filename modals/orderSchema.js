@@ -3,7 +3,12 @@ import mongoose from "mongoose";
 const orderItemSchema = new mongoose.Schema({
   foodId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Food",
+    ref: "Product",
+    required: true,
+  },
+  foodName: {
+    type: String,
+    ref: "Product",
     required: true,
   },
   quantity: {
@@ -14,7 +19,7 @@ const orderItemSchema = new mongoose.Schema({
   price: {
     type: Number,
     required: true,
-  }
+  },
 });
 
 const orderSchema = new mongoose.Schema({
@@ -25,7 +30,7 @@ const orderSchema = new mongoose.Schema({
   },
   // Replace cartIds with a self-contained items array
   items: [orderItemSchema],
-  
+
   status: {
     type: String,
     enum: ["pending", "preparing", "Delivered", "cancelled"],

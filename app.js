@@ -7,6 +7,7 @@ import cartRoutes from './routes/cartRoutes.js'
 import orderRoutes from './routes/orderRoutes.js'
 import likeRoutes from './routes/likeRoutes.js'
 import cors from "cors";
+import Razorpay from 'razorpay'
 
 
 const app = express();
@@ -26,6 +27,11 @@ const PORT = process.env.PORT || 5000;
 app.get("/", (req, res) => {
   res.send("Hello world !");
 });
+
+export const instance = new Razorpay({
+  key_id : process.env.RAZORPAY_KEY_ID,
+  key_secret : process.env.RAZORPAY_KEY_SECRET
+})
 
 
 app.use("/user",userRoutes)

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const foodSchema = new mongoose.Schema({
+const productSchema = new mongoose.Schema({
   restaurantId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Restaurant",
@@ -44,5 +44,5 @@ const foodSchema = new mongoose.Schema({
   },
 });
 
-const Food = mongoose.model("Food", foodSchema);
-export default Food;
+const Product = mongoose.model("Product", productSchema);
+export default Product;

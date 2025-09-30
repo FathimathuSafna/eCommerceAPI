@@ -1,50 +1,61 @@
 import Order from "../modals/orderSchema.js";
 import Cart from "../modals/cartSchema.js";
+import { instance } from "../app.js";
 
-// controllers/orderController.js
+
 
 const createOrder = async (req, res) => {
   const userId = req.user._id;
+  const { amount } = req.body;
+
   try {
-    // Find all cart items for the user AND populate the food details
-    const userCarts = await Cart.find({ userId }).populate('foodId');
+    const userCarts = await Cart.find({ userId }).populate({
+      path: "foodId",
+      select: "name price image restaurantId",
+      populate: { path: "restaurantId", select: "restaurantsName" },
+    });
 
     if (userCarts.length === 0) {
       return res.status(400).json({ msg: "Cart is empty" });
     }
 
-    // Map the cart items to the new order 'items' structure
-    const orderItems = userCarts.map((cartItem) => {
-      if (!cartItem.foodId) {
-        throw new Error('Cart contains an invalid item.');
-      }
-      return {
-        foodId: cartItem.foodId._id,
-        quantity: cartItem.quantity,
-        price: cartItem.foodId.price, // Capturing the price at the time of order
-      };
-    });
+    const orderItems = userCarts.map((cartItem) => ({
+      foodId: cartItem.foodId._id,
+      foodName :cartItem.foodId.name,
+      quantity: cartItem.quantity,
+      price: cartItem.foodId.price,
+    }));
 
     const newOrder = await Order.create({
       userId,
       items: orderItems,
+      totalAmount: amount, 
     });
 
-    // It's still correct to clear the cart after the order is successfully created
+    const options = {
+      amount: Number(amount * 100), 
+      currency: "INR",
+      receipt: `order_rcptid_${newOrder._id}`,
+    };
+    const razorpayOrder = await instance.orders.create(options);
+
     await Cart.deleteMany({ userId });
 
+    // 6. Send response
     res.status(201).json({
       msg: "Order created successfully",
-      data: newOrder,
+      order: newOrder,
+      razorpayOrder,
     });
   } catch (err) {
-    console.error(err);
-    res.status(400).json({
-      err: err.message,
+    console.error("Error creating order:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Failed to create order",
+      error: err.message,
     });
   }
 };
-
 
 const deleteOrder = async (req, res) => {
   try {
@@ -57,20 +68,20 @@ const deleteOrder = async (req, res) => {
   } catch (err) {
     res.status(400).json(err);
   }
-}
+};
 
 const getOrders = async (req, res) => {
   const userId = req.user._id;
   try {
     const orderDetails = await Order.find({ userId: userId })
-      .populate({ path: 'userId', select: 'fullName email' })
-      .populate({ 
-        path: 'items.foodId', 
-        select: 'name price image restaurantId',
+      .populate({ path: "userId", select: "fullName email" })
+      .populate({
+        path: "items.foodId",
+        select: "name price image restaurantId",
         populate: {
-          path: 'restaurantId',
-          select: 'restaurantsName'
-        }
+          path: "restaurantId",
+          select: "restaurantsName",
+        },
       });
 
     res.status(200).json({
@@ -82,19 +93,48 @@ const getOrders = async (req, res) => {
   }
 };
 
+const processPayment = async (req, res) => {
+  try {
+    const options = {
+      amount: Number(req.body.amount * 100), // amount in paise
+      currency: "INR",
+    };
+
+    const order = await instance.orders.create(options); // fixed syntax
+
+    res.status(200).json({
+      success: true,
+      order,
+    });
+  } catch (err) {
+    console.error("Error creating Razorpay order:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Failed to create order",
+      error: err.message,
+    });
+  }
+};
+
+const getKey = async (req, res) => {
+  res.status(200).json({
+    key: process.env.RAZORPAY_KEY_ID,
+  });
+};
+
 const getAllOrders = async (req, res) => {
   try {
     const orderDetails = await Order.find()
-      .populate({ path: 'userId', select: 'fullName email' })
-      .populate({ 
-        path: 'items.foodId', 
-        select: 'name price image restaurantId',
+      .populate({ path: "userId", select: "fullName email" })
+      .populate({
+        path: "items.foodId",
+        select: "name price image restaurantId",
         populate: {
-          path: 'restaurantId',
-          select: 'restaurantsName'
-        }
+          path: "restaurantId",
+          select: "restaurantsName",
+        },
       });
-console.log("order",orderDetails);
+    console.log("order", orderDetails);
 
     res.status(200).json({
       msg: "All orders fetched successfully",
@@ -106,20 +146,26 @@ console.log("order",orderDetails);
 };
 
 const updateOrder = async (req, res) => {
-    try {
-        let id = req.params.id;
-        const updateOrder = await Order.findByIdAndUpdate(id, req.body, {
-            new: true,
-        });
-        res.status(201).json({
-            msg: "Order updated successfully",
-            data: updateOrder,
-        });
-    } catch (err) {
-        res.status(400).json(err);
-    }   
-}
+  try {
+    let id = req.params.id;
+    const updateOrder = await Order.findByIdAndUpdate(id, req.body, {
+      new: true,
+    });
+    res.status(201).json({
+      msg: "Order updated successfully",
+      data: updateOrder,
+    });
+  } catch (err) {
+    res.status(400).json(err);
+  }
+};
 
-
-
-export { createOrder,deleteOrder ,getOrders,getAllOrders,updateOrder};
+export {
+  createOrder,
+  deleteOrder,
+  getOrders,
+  getAllOrders,
+  updateOrder,
+  processPayment,
+  getKey,
+};

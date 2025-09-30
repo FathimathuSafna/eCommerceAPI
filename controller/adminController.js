@@ -1,6 +1,6 @@
 import Admin from "../modals/adminSchema.js";
 import Restaurant from "../modals/restaurantSchema.js";
-import Food from "../modals/foodSchema.js";
+import Product from "../modals/productSchema.js";
 import generateToken from "../utils/generateToken.js";
 import bcrypt from "bcryptjs";
 import User from "../modals/userSchema.js";
@@ -125,7 +125,7 @@ const deleteRestaurants = async (req, res) => {
 
 const addFoodItems = async (req, res) => {
   try {
-    const foodDetails = await Food.create(req.body);
+    const foodDetails = await Product.create(req.body);
     res.status(201).json({
       msg: "Food item added successfully",
       data: foodDetails,
@@ -142,7 +142,7 @@ const getFoodItems = async (req, res) => {
   try {
     // 1. Get all food items
     // .lean() makes the query faster as it returns plain JS objects
-    const allFoods = await Food.find({}).populate("restaurantId", "restaurantsName").lean();
+    const allFoods = await Product.find({}).populate("restaurantId", "restaurantsName").lean();
 
     // 2. Check if a user is logged in (from your 'protect' middleware)
     const userId = req.user?._id;
@@ -177,7 +177,7 @@ const getFoodItems = async (req, res) => {
 const updateFoodItems = async (req, res) => {
   try {
     let id = req.params.id;
-    const updateFood = await Food.findByIdAndUpdate(id, req.body, {
+    const updateFood = await Product.findByIdAndUpdate(id, req.body, {
       new: true,
     });
     res.status(201).json({
@@ -192,7 +192,7 @@ const updateFoodItems = async (req, res) => {
 const deleteFoodItems = async (req, res) => {
   try {
     let id = req.params.id;
-    const deleteFood = await Food.findByIdAndDelete(id);
+    const deleteFood = await Product.findByIdAndDelete(id);
     res.status(201).json({
       msg: "Food item deleted successfully",
       data: deleteFood,
@@ -217,7 +217,7 @@ const getAllUserDetails = async (req, res) => {
 
 const getRestaurantsDetails = async (req,res) =>{
   try{
-    const resDetails = await Food.find().populate("restaurantId","restaurantsName address description image")
+    const resDetails = await Product.find().populate("restaurantId","restaurantsName address description image")
     res.status(200).json({
       msg:"restaurant detailes fetched successfully",
       data:resDetails
