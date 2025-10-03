@@ -1,22 +1,28 @@
 import Likes from "../modals/likeSchema.js";
 import mongoose from "mongoose";
 
+// backend/controller/likeController.js
+
 const addLike = async (req, res) => {
   try {
-    const { foodId,userId } = req.body;
+    const userId = req.user._id; // ✅ Get from middleware, not body
+    const { foodId } = req.body;
 
     if (!foodId) {
       return res.status(400).json({ msg: "Food ID is required." });
     }
 
+    // Check if already liked
     const existingLike = await Likes.findOne({ userId, foodId });
     if (existingLike) {
       return res.status(409).json({ msg: "Item already liked." });
     }
 
+    // Create new like
     const newLike = await Likes.create({ userId, foodId });
     res.status(201).json({ msg: "Like added successfully", data: newLike });
   } catch (err) {
+    console.error("Add like error:", err); // ✅ Log the error
     res.status(500).json({ msg: "Server Error", error: err.message });
   }
 };
