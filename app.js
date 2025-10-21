@@ -15,7 +15,7 @@ const app = express();
 const corsOptions = {
  origin: [
     // "http://localhost:5173",
-    "https://e-commerce-ui-731u.vercel.app/"
+    "https://e-commerce-ui-731u.vercel.app"
   ],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
