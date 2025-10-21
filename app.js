@@ -44,9 +44,8 @@ app.use("/likes",likeRoutes)
 
 
 
-app.listen(PORT, () => {
-  console.log(`server is running on ${PORT}`);
+connectDB().then(() => {
+  app.listen(PORT, () => console.log(`Server running on ${PORT}`));
 });
 
-connectDB()
 
