@@ -13,16 +13,44 @@ const orderSchema = new mongoose.Schema({
       required: true,
     },
   ],
-  status: {
+  address: {
     type: String,
-    enum: ["pending", "preparing", "delivered", "cancelled"],
-    default: "pending",
+    required: true,
+  },
+   restaurantId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Restaurant' 
+  },
+  amount: {  // ADD THIS
+    type: Number,
+    required: true,
+  },
+  razorpayOrderId: {  // ADD THIS
+    type: String,
+    required: false,
+  },
+  razorpayPaymentId: {  // ADD THIS
+    type: String,
+    required: false,
+  },
+  razorpaySignature: {  // ADD THIS
+    type: String,
+    required: false,
+  },
+  status:{
+    type:String,
+    enum:["pending","preparing","delivered","cancelled"],
+    default:"pending"
+  },
+  paymentStatus: {
+    type: String,
+    enum: ["Pending", "Completed", "Failed"],
+    default: "Pending",
   },
   createdAt: {
     type: Date,
     default: Date.now,
   },
-  
 });
 
 const Order = mongoose.model("Order", orderSchema);

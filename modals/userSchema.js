@@ -15,6 +15,12 @@ var userSchema = new Schema({
     type: String,
     required: true,
   },
+  address: {
+    type: String,
+  },
+  pincode: {
+    type: Number,
+  },
   password: {
     type: String,
     required: true,

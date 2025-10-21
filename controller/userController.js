@@ -68,7 +68,6 @@ const getUserDetails = async (req, res) => {
   let id = req.user._id
   try {
     const getUser = await User.findById(id);
-    console.log("user detai",getUser)
     res.status(201).json({
       msg: "user details fetched successfully",
       data: getUser,

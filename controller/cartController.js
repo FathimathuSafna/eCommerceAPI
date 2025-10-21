@@ -2,6 +2,7 @@
 
 import Cart from "../modals/cartSchema.js";
 import Order from "../modals/orderSchema.js";
+import mongoose from "mongoose";
 
 // NEW: Sync localStorage cart with database after login
 const syncCart = async (req, res) => {
@@ -23,11 +24,7 @@ const syncCart = async (req, res) => {
     );
 
     // Filter out food items that already exist in the cart
-    const newFoodIds = foodIds.filter(
-      (foodId) => !existingFoodIds.has(foodId)
-    );
-
-    // Add only new items to the cart
+    const newFoodIds = foodIds.filter((foodId) => !existingFoodIds.has(foodId));
     const cartPromises = newFoodIds.map((foodId) =>
       Cart.create({
         userId,
@@ -67,41 +64,74 @@ const syncCart = async (req, res) => {
 const addToCart = async (req, res) => {
   const userId = req.user._id;
   const foodId = req.params.id;
-  
   if (!foodId) {
     return res.status(400).json({ msg: "foodId is required" });
   }
 
   try {
-    // Check if item already exists in cart
-    const existingItem = await Cart.findOne({ userId, foodId });
-    
-    if (existingItem) {
-      // Update quantity if it exists
-      existingItem.quantity += 1;
-      await existingItem.save();
-      
-      return res.status(200).json({
-        msg: "Item quantity updated in cart",
-        data: existingItem,
-      });
-    }
+    const existingItems = await Cart.find({ userId, foodId });
+    console.log("Existing items:", existingItems);
 
-    // Create new cart item
+    if (existingItems.length > 0) {
+      const cartIds = existingItems.map(item => item._id);
+
+      const ordered = await Order.find({
+        cartIds: { $in: cartIds },
+      }).select("cartIds");
+
+      const orderedCartIds = ordered.flatMap(order => order.cartIds.map(id => id.toString()));
+
+      const unOrderedItems = existingItems.filter(
+        item => !orderedCartIds.includes(item._id.toString())
+      );
+
+      if (unOrderedItems.length > 0) {
+        const itemToUpdate = unOrderedItems[0];
+        itemToUpdate.quantity += 1;
+        await itemToUpdate.save();
+
+        return res.status(200).json({
+          status: true,
+          msg: "Item quantity updated in cart",
+          data: itemToUpdate,
+        });
+      } else {
+        const newCartItem = await Cart.create({
+          userId,
+          foodId,
+          quantity: 1,
+        });
+
+        return res.status(201).json({
+          status: true,
+          msg: "Item added to cart again after being ordered previously",
+          data: newCartItem,
+        });
+      }
+    }
+    console.log("No existing item found. Creating a new cart item.");
     const cartItem = await Cart.create({
       userId,
       foodId,
       quantity: 1,
     });
-    
-    res.status(201).json({
+
+    return res.status(201).json({
+      status: true,
       msg: "Item added to cart successfully",
       data: cartItem,
     });
   } catch (err) {
-    res.status(400).json(err);
+    console.error("Error adding to cart:", err);
+    return res.status(500).json({
+      status: false,
+      msg: "Server error",
+      error: err.message,
+    });
   }
 };
+
+
 
 const removeFromCart = async (req, res) => {
   const id = req.params.id;
@@ -120,13 +150,13 @@ const getCartItems = async (req, res) => {
   const userId = req.user._id;
 
   try {
-    // Find all cartIds that are already linked to an Order
+    // Fetch all orders of the user
     const orders = await Order.find({ userId }).select("cartIds").lean();
     const orderedCartIds = new Set(
-      orders.flatMap((order) => order.cartIds.map((id) => id.toString()))
+      orders.flatMap(order => order.cartIds.map(id => id.toString()))
     );
 
-    // Get carts for this user that are NOT in an order
+    // Fetch all cart items
     const cartItems = await Cart.find({ userId })
       .populate({
         path: "foodId",
@@ -138,30 +168,36 @@ const getCartItems = async (req, res) => {
       })
       .lean();
 
-    // Filter out cart items that belong to past orders
+    // Only keep items not part of any order
     const activeCartItems = cartItems.filter(
-      (item) => !orderedCartIds.has(item._id.toString())
+      item => !orderedCartIds.has(item._id.toString())
     );
 
-    // Calculate totals
-    const cartItemsWithTotal = activeCartItems.map((item) => ({
+    // Add totalPrice to each item
+    const cartItemsWithTotal = activeCartItems.map(item => ({
       ...item,
       totalPrice: item.quantity * (item.foodId?.price || 0),
     }));
 
+    // Calculate total cart price
     const cartTotalPrice = cartItemsWithTotal.reduce(
       (sum, item) => sum + item.totalPrice,
       0
     );
 
     res.status(200).json({
+      success: true,
       msg: "Cart items fetched successfully",
       data: cartItemsWithTotal,
       cartTotalPrice,
     });
   } catch (err) {
     console.error("Error fetching cart items:", err);
-    res.status(400).json({ msg: "Failed to fetch cart items", error: err });
+    res.status(500).json({
+      success: false,
+      msg: "Failed to fetch cart items",
+      error: err.message,
+    });
   }
 };
 

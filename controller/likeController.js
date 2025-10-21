@@ -42,7 +42,6 @@ const fetchLikes = async (req, res) => {
         },
       })
       .lean();
-    console.log("basbhasjhbds", userLikes);
 
     // Optional: remove likes where the food was deleted
     const validLikes = userLikes.filter((like) => like.foodId !== null);
