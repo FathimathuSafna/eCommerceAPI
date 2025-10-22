@@ -11,7 +11,7 @@ const createOrder = async (req, res) => {
   try {
     console.log("Request body:", req.body);
 
-    // 1️⃣ Get all previously ordered cartIds
+    // Get all previously ordered cartIds
     const previousOrders = await Order.find({ userId }).select("cartIds");
     const usedCartIds = previousOrders.flatMap(order =>
       order.cartIds.map(id => id.toString())
@@ -19,7 +19,7 @@ const createOrder = async (req, res) => {
 
     console.log("Previously used cart IDs:", usedCartIds);
 
-    // 2️⃣ Get only cart items NOT previously ordered
+    //  Get only cart items NOT previously ordered
     const userCarts = await Cart.find({
       userId,
       _id: { $nin: usedCartIds } // exclude old cart items
@@ -38,13 +38,13 @@ const createOrder = async (req, res) => {
       });
     }
 
-    // 3️⃣ Create a Razorpay order
+    //  Create a Razorpay order
     const razorpayOrder = await instance.orders.create({
       amount: Number(amount * 100),
       currency: "INR",
     });
 
-    // 4️⃣ Group by restaurant
+    // Group by restaurant
     const restaurantGroups = {};
     userCarts.forEach(cartItem => {
       const restaurantId = cartItem.foodId?.restaurantId?._id?.toString();
@@ -63,7 +63,7 @@ const createOrder = async (req, res) => {
       restaurantGroups[restaurantId].totalAmount += cartItem.foodId.price * cartItem.quantity;
     });
 
-    // 5️⃣ Create new orders for each restaurant
+    //  Create new orders for each restaurant
     const createdOrders = [];
     for (const [restaurantId, group] of Object.entries(restaurantGroups)) {
       const cartIds = group.cartItems.map(c => c._id);
@@ -80,7 +80,7 @@ const createOrder = async (req, res) => {
       createdOrders.push(newOrder);
     }
 
-    // 6️⃣ Return response
+    // Return response
     res.status(201).json({
       success: true,
       msg: `${createdOrders.length} order(s) created successfully`,

@@ -21,19 +21,19 @@ const orderSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Restaurant' 
   },
-  amount: {  // ADD THIS
+  amount: { 
     type: Number,
     required: true,
   },
-  razorpayOrderId: {  // ADD THIS
+  razorpayOrderId: {  
     type: String,
     required: false,
   },
-  razorpayPaymentId: {  // ADD THIS
+  razorpayPaymentId: {  
     type: String,
     required: false,
   },
-  razorpaySignature: {  // ADD THIS
+  razorpaySignature: {  
     type: String,
     required: false,
   },

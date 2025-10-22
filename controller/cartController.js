@@ -1,8 +1,5 @@
-// cartController.js - Add this new function
-
 import Cart from "../modals/cartSchema.js";
 import Order from "../modals/orderSchema.js";
-import mongoose from "mongoose";
 
 // NEW: Sync localStorage cart with database after login
 const syncCart = async (req, res) => {
@@ -201,21 +198,47 @@ const getCartItems = async (req, res) => {
   }
 };
 
+// In your cart controller file
+
+// In your cart controller file
+
 const updateCartItem = async (req, res) => {
   try {
-    const id = req.params.id;
+    const cartId = req.params.id; 
     const { quantity } = req.body;
-    const updatedCartItem = await Cart.findByIdAndUpdate(
-      id,
-      { quantity },
-      { new: true }
-    );
-    res.status(200).json({
-      msg: "Cart item updated successfully",
-      data: updatedCartItem,
-    });
+
+    if (quantity <= 0) {
+      const deletedItem = await Cart.findByIdAndDelete(cartId);
+      
+      if (!deletedItem) {
+        return res.status(404).json({ msg: "Cart item not found to delete" });
+      }
+
+      return res.status(200).json({
+        msg: "Cart item removed successfully",
+        data: deletedItem,
+      });
+
+    } else {
+      const updatedCartItem = await Cart.findByIdAndUpdate(
+        cartId,
+        { quantity: quantity },
+        { new: true } 
+      );
+
+      if (!updatedCartItem) {
+        return res.status(404).json({ msg: "Cart item not found to update" });
+      }
+
+      return res.status(200).json({
+        msg: "Cart item updated successfully",
+        data: updatedCartItem,
+      });
+    }
+
   } catch (err) {
-    res.status(400).json(err);
+    console.error("Error updating cart item:", err);
+    res.status(500).json({ msg: "Server error", error: err.message });
   }
 };
 

@@ -6,6 +6,7 @@ import adminRoutes from './routes/adminRoutes.js'
 import cartRoutes from './routes/cartRoutes.js'
 import orderRoutes from './routes/orderRoutes.js'
 import likeRoutes from './routes/likeRoutes.js'
+import productRoutes from './routes/productRoutes.js'
 import cors from "cors";
 import Razorpay from 'razorpay'
 
@@ -14,8 +15,7 @@ const app = express();
 
 const corsOptions = {
  origin: [
-    //"http://localhost:5173",
-    "https://e-commerce-ui-731u.vercel.app"
+    "http://localhost:5173","https://e-commerce-ui-731u.vercel.app"
   ],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
@@ -40,6 +40,7 @@ app.use("/admin",adminRoutes)
 app.use("/cart",cartRoutes)
 app.use("/order",orderRoutes)
 app.use("/likes",likeRoutes)
+app.use('/products',productRoutes)
 
 
 

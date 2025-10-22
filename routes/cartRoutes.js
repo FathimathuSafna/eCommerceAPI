@@ -12,7 +12,7 @@ const app = express.Router();
 
 app.route("/").get(protect, getCartItems);
 app.route("/sync").post(protect, syncCart); 
-app.route("/:id").post(protect, addToCart);
+app.route("/:id").post(protect, addToCart)
 app.route("/remove/:id").delete(removeFromCart);
 app.route("/update/:id").put(protect, updateCartItem);
 
