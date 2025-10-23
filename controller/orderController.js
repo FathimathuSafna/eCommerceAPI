@@ -19,10 +19,10 @@ const createOrder = async (req, res) => {
 
     console.log("Previously used cart IDs:", usedCartIds);
 
-    //  Get only cart items NOT previously ordered
+    // Get only cart items NOT previously ordered
     const userCarts = await Cart.find({
       userId,
-      _id: { $nin: usedCartIds } // exclude old cart items
+      _id: { $nin: usedCartIds }
     }).populate({
       path: "foodId",
       populate: {
@@ -38,49 +38,30 @@ const createOrder = async (req, res) => {
       });
     }
 
-    //  Create a Razorpay order
+    // Create Razorpay order once
     const razorpayOrder = await instance.orders.create({
       amount: Number(amount * 100),
       currency: "INR",
     });
 
-    // Group by restaurant
-    const restaurantGroups = {};
-    userCarts.forEach(cartItem => {
-      const restaurantId = cartItem.foodId?.restaurantId?._id?.toString();
-      if (!restaurantId) return;
-
-      if (!restaurantGroups[restaurantId]) {
-        restaurantGroups[restaurantId] = {
-          restaurantId,
-          restaurantName: cartItem.foodId.restaurantId.restaurantsName,
-          cartItems: [],
-          totalAmount: 0,
-        };
-      }
-
-      restaurantGroups[restaurantId].cartItems.push(cartItem);
-      restaurantGroups[restaurantId].totalAmount += cartItem.foodId.price * cartItem.quantity;
-    });
-
-    //  Create new orders for each restaurant
+    // Create Separate Orders for Each Food Item
     const createdOrders = [];
-    for (const [restaurantId, group] of Object.entries(restaurantGroups)) {
-      const cartIds = group.cartItems.map(c => c._id);
 
+    for (const cartItem of userCarts) {
       const newOrder = await Order.create({
         userId,
-        cartIds,
+        cartIds: [cartItem._id], // single item
         address,
-        amount: group.totalAmount,
+        amount: cartItem.foodId.price * cartItem.quantity,
         razorpayOrderId: razorpayOrder.id,
         paymentStatus: "Pending",
+        restaurantId: cartItem.foodId.restaurantId._id,
+        restaurantName: cartItem.foodId.restaurantId.restaurantsName,
       });
 
       createdOrders.push(newOrder);
     }
 
-    // Return response
     res.status(201).json({
       success: true,
       msg: `${createdOrders.length} order(s) created successfully`,
@@ -88,6 +69,7 @@ const createOrder = async (req, res) => {
       razorpayOrder,
       totalOrders: createdOrders.length,
     });
+
   } catch (err) {
     console.error("Error creating order:", err);
     res.status(500).json({
@@ -97,7 +79,6 @@ const createOrder = async (req, res) => {
     });
   }
 };
-
 
 
 // Add this new controller for handling payment failures
