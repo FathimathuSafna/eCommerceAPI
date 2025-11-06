@@ -7,6 +7,7 @@ import cartRoutes from './routes/cartRoutes.js'
 import orderRoutes from './routes/orderRoutes.js'
 import likeRoutes from './routes/likeRoutes.js'
 import productRoutes from './routes/productRoutes.js'
+import shippingRoutes from "./routes/shippingRoutes.js";
 import cors from "cors";
 import Razorpay from 'razorpay'
 
@@ -41,6 +42,7 @@ app.use("/cart",cartRoutes)
 app.use("/order",orderRoutes)
 app.use("/likes",likeRoutes)
 app.use('/products',productRoutes)
+app.use('/shipping',shippingRoutes)
 
 
 

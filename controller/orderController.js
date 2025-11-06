@@ -19,7 +19,6 @@ const createOrder = async (req, res) => {
 
     console.log("Previously used cart IDs:", usedCartIds);
 
-    // Get only cart items NOT previously ordered
     const userCarts = await Cart.find({
       userId,
       _id: { $nin: usedCartIds }
@@ -319,6 +318,44 @@ const updateOrder = async (req, res) => {
   }
 };
 
+const returnOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Optional: check if order exists
+    const existingOrder = await Order.findById(id);
+    if (!existingOrder) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Optional: ensure only delivered orders can be returned
+    if (existingOrder.status !== "Delivered") {
+      return res.status(400).json({ message: "Only delivered orders can be returned" });
+    }
+
+    // Update order status and include any additional info from request body
+    const updatedOrder = await Order.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          status: "Return Initiated",
+          returnReason: req.body.returnReason || "Not specified",
+          returnRequestedAt: new Date(),
+        },
+      },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Return initiated successfully",
+      data: updatedOrder,
+    });
+  } catch (error) {
+    console.error("Error in returnOrder:", error);
+    res.status(500).json({ message: "Internal Server Error", error });
+  }
+}
+
 export {
   createOrder,
   verifyPayment,
@@ -328,5 +365,6 @@ export {
   updateOrder,
   processPayment,
   getKey,
-  handlePaymentFailure
+  handlePaymentFailure,
+  returnOrder
 };
